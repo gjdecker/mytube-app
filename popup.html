@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            width: 400px;
+            max-height: 580px;
+            background-color: #0f0f0f;
+            color: #e1e1e1;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 12px 16px;
+            background-color: #1a1a1a;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { font-size: 18px; font-weight: 700; color: #ff4444; }
+        .logo span { color: #e1e1e1; }
+        .status { font-size: 11px; padding: 3px 8px; border-radius: 10px; }
+        .status.active { background-color: rgba(76,175,80,0.2); color: #4caf50; }
+        .status.inactive { background-color: rgba(255,68,68,0.2); color: #ff4444; }
+
+        /* ── Tabs ── */
+        .tabs { display: flex; border-bottom: 1px solid #2a2a2a; background-color: #1a1a1a; }
+        .tab {
+            flex: 1; padding: 10px 4px; text-align: center; font-size: 12px;
+            cursor: pointer; border: none; background: none; color: #888;
+            border-bottom: 2px solid transparent; transition: all 0.2s;
+        }
+        .tab:hover { color: #e1e1e1; }
+        .tab.active { color: #ff4444; border-bottom-color: #ff4444; }
+        .tab .badge {
+            display: inline-block; background-color: #ff4444; color: white;
+            font-size: 10px; padding: 1px 5px; border-radius: 8px; margin-left: 3px;
+        }
+
+        .tab-content { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .tab-content.active { display: flex; }
+
+        /* ── Chat Tab ── */
+        .chat-messages {
+            flex: 1; overflow-y: auto; padding: 12px;
+            display: flex; flex-direction: column; gap: 8px; max-height: 340px;
+        }
+        .chat-message {
+            max-width: 90%; padding: 8px 12px; border-radius: 10px;
+            font-size: 13px; line-height: 1.4;
+        }
+        .chat-message.user { align-self: flex-end; background-color: #2a4a8a; border-bottom-right-radius: 4px; }
+        .chat-message.assistant { align-self: flex-start; background-color: #2a2a2a; border-bottom-left-radius: 4px; }
+        .chat-message .pref-update {
+            margin-top: 6px; padding-top: 6px; border-top: 1px solid #3a3a3a;
+            font-size: 11px; color: #888;
+        }
+        .chat-message .pref-update .added { color: #4caf50; }
+        .chat-message .pref-update .removed { color: #ff4444; }
+
+        .chat-input-container { padding: 10px 12px; border-top: 1px solid #2a2a2a; display: flex; gap: 8px; }
+        .chat-input {
+            flex: 1; padding: 8px 12px; font-size: 13px;
+            border: 1px solid #3a3a3a; border-radius: 8px;
+            background-color: #121212; color: #e1e1e1; outline: none; font-family: inherit;
+        }
+        .chat-input:focus { border-color: #ff4444; }
+        .chat-input::placeholder { color: #555; }
+        .chat-send {
+            padding: 8px 14px; border: none; border-radius: 8px;
+            background-color: #ff4444; color: white; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .chat-send:hover { background-color: #e63939; }
+        .chat-send:disabled { background-color: #3a3a3a; color: #666; cursor: not-allowed; }
+
+        /* ── Blocked Tab ── */
+        .blocked-container {
+            flex: 1; overflow-y: auto; padding: 12px; max-height: 430px;
+        }
+        .blocked-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .blocked-header h3 { font-size: 13px; color: #888; }
+        .blocked-count {
+            font-size: 11px; padding: 2px 8px; border-radius: 8px;
+            background-color: rgba(255,68,68,0.15); color: #ff4444;
+        }
+
+        .blocked-item {
+            display: flex; gap: 10px; padding: 8px;
+            background-color: #1a1a1a; border-radius: 8px;
+            margin-bottom: 6px; border: 1px solid #2a2a2a;
+        }
+        .blocked-thumb {
+            width: 80px; height: 45px; border-radius: 4px;
+            object-fit: cover; flex-shrink: 0; background-color: #2a2a2a;
+        }
+        .blocked-info { flex: 1; min-width: 0; }
+        .blocked-title {
+            font-size: 12px; font-weight: 600; line-height: 1.3;
+            margin-bottom: 3px;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .blocked-channel { font-size: 11px; color: #888; margin-bottom: 3px; }
+        .blocked-reason {
+            font-size: 10px; padding: 2px 6px; border-radius: 4px;
+            display: inline-block;
+        }
+        .blocked-reason.l1 { background-color: rgba(255,68,68,0.15); color: #ff4444; }
+        .blocked-reason.l2 { background-color: rgba(255,152,0,0.15); color: #ff9800; }
+        .blocked-reason.l3 { background-color: rgba(156,39,176,0.15); color: #ce93d8; }
+
+        .no-blocked {
+            color: #555; font-size: 12px; font-style: italic;
+            text-align: center; padding: 30px 20px;
+        }
+
+        /* ── Preferences Tab ── */
+        .prefs-container { flex: 1; overflow-y: auto; padding: 12px; max-height: 430px; }
+        .pref-category { margin-bottom: 14px; }
+        .pref-category h3 {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+            color: #666; margin-bottom: 6px;
+        }
+        .pref-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+        .pref-tag {
+            padding: 3px 8px; border-radius: 10px; font-size: 11px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .pref-tag.like { background-color: rgba(76,175,80,0.15); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
+        .pref-tag.dislike { background-color: rgba(255,68,68,0.15); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
+        .pref-tag.blocked { background-color: rgba(255,152,0,0.15); color: #ff9800; border: 1px solid rgba(255,152,0,0.3); }
+        .pref-tag.person { background-color: rgba(156,39,176,0.15); color: #ce93d8; border: 1px solid rgba(156,39,176,0.3); }
+        .pref-tag .remove { cursor: pointer; font-size: 13px; opacity: 0.7; }
+        .pref-tag .remove:hover { opacity: 1; }
+        .no-prefs { color: #555; font-size: 12px; font-style: italic; padding: 20px; text-align: center; }
+
+        /* ── Settings Tab ── */
+        .settings-container { flex: 1; overflow-y: auto; padding: 12px; }
+        .setting-group { margin-bottom: 16px; }
+        .setting-group label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; }
+        .setting-group input[type="password"],
+        .setting-group input[type="text"] {
+            width: 100%; padding: 8px 12px; font-size: 13px;
+            border: 1px solid #3a3a3a; border-radius: 8px;
+            background-color: #121212; color: #e1e1e1; outline: none; font-family: inherit;
+        }
+        .setting-group input:focus { border-color: #ff4444; }
+        .save-btn {
+            width: 100%; padding: 10px; border: none; border-radius: 8px;
+            background-color: #ff4444; color: white; font-size: 13px;
+            font-weight: 600; cursor: pointer; margin-top: 8px;
+        }
+        .save-btn:hover { background-color: #e63939; }
+        .save-status { text-align: center; font-size: 12px; color: #4caf50; margin-top: 8px; display: none; }
+        .reset-btn {
+            width: 100%; padding: 8px; border: 1px solid #3a3a3a; border-radius: 8px;
+            background: none; color: #888; font-size: 12px; cursor: pointer; margin-top: 16px;
+        }
+        .reset-btn:hover { border-color: #ff4444; color: #ff4444; }
+
+        .filter-info {
+            margin-top: 16px; padding: 10px; background-color: #1a1a1a;
+            border-radius: 8px; border: 1px solid #2a2a2a;
+        }
+        .filter-info h4 { font-size: 12px; color: #888; margin-bottom: 6px; }
+        .filter-info .layer { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+        .filter-info .layer p { font-size: 11px; color: #666; line-height: 1.4; }
+        .filter-info .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .filter-info .dot.l1 { background-color: #ff4444; }
+        .filter-info .dot.l2 { background-color: #ff9800; }
+        .filter-info .dot.l3 { background-color: #9c27b0; }
+
+        .tip-text {
+            margin-top: 12px; padding: 10px; background-color: #1a1a1a;
+            border-radius: 8px; border: 1px solid #2a2a2a;
+            font-size: 11px; color: #666; line-height: 1.5;
+        }
+        .tip-text strong { color: #888; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">My<span>Tube</span></div>
+        <div class="status" id="statusBadge">Loading...</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="chat">💬 Chat</button>
+        <button class="tab" data-tab="blocked">🚫 Blocked <span class="badge" id="blockedBadge" style="display:none">0</span></button>
+        <button class="tab" data-tab="prefs">🏷️ Prefs</button>
+        <button class="tab" data-tab="settings">⚙️</button>
+    </div>
+
+    <!-- Chat Tab -->
+    <div class="tab-content active" id="tab-chat">
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message assistant">
+                Hi! Tell me what to filter on YouTube:<br><br>
+                • "Block any video with John Smith"<br>
+                • "I hate reaction videos and clickbait"<br>
+                • "Block the channel DramaAlert"<br><br>
+                💡 <strong>Tip:</strong> You can also right-click any video on YouTube to block its channel or a specific person!
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Tell me what to filter...">
+            <button class="chat-send" id="chatSend">Send</button>
+        </div>
+    </div>
+
+    <!-- Blocked Tab -->
+    <div class="tab-content" id="tab-blocked">
+        <div class="blocked-container" id="blockedContainer">
+            <div class="no-blocked" id="noBlocked">No videos filtered on this page yet.<br><br>Browse YouTube and videos matching your preferences will be filtered automatically.</div>
+        </div>
+    </div>
+
+    <!-- Preferences Tab -->
+    <div class="tab-content" id="tab-prefs">
+        <div class="prefs-container" id="prefsContainer">
+            <div class="no-prefs">No preferences yet — use the Chat tab to add some!</div>
+        </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="tab-settings">
+        <div class="settings-container">
+            <div class="setting-group">
+                <label>Anthropic API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+            </div>
+            <button class="save-btn" id="saveSettings">Save Settings</button>
+            <div class="save-status" id="saveStatus">✓ Saved!</div>
+
+            <div class="filter-info">
+                <h4>How Filtering Works</h4>
+                <div class="layer"><div class="dot l1"></div><p><strong>L1:</strong> Instant title/description scan</p></div>
+                <div class="layer"><div class="dot l2"></div><p><strong>L2:</strong> AI detects indirect references</p></div>
+                <div class="layer"><div class="dot l3"></div><p><strong>L3:</strong> Caption/transcript deep scan</p></div>
+            </div>
+
+            <div class="tip-text">
+                <strong>💡 Right-click tip:</strong> Right-click any video on YouTube to see MyTube options — block the channel or block a specific person appearing in that video.
+            </div>
+
+            <button class="reset-btn" id="resetPrefs">Reset All Preferences</button>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+    "manifest_version": 3,
+    "name": "MyTube - AI Video Filter",
+    "version": "1.0.0",
+    "description": "Filter YouTube recommendations using AI-powered 3-layer filtering. Block people, topics, channels, and content styles.",
+    "permissions": [
+        "storage",
+        "activeTab",
+        "contextMenus"
+    ],
+    "host_permissions": [
+        "https://www.youtube.com/*",
+        "https://api.anthropic.com/*",
+        "https://yt.lemnoslife.com/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": ["https://www.youtube.com/*"],
+            "js": ["content.js"],
+            "css": ["content.css"],
+            "run_at": "document_idle"
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "MyTube AI Filter"
+    },
+    "icons": {
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "background": {
+        "service_worker": "background.js"
+    }
+}
